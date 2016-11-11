@@ -133,7 +133,6 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
         this.options.entryVariables[name],
       )
 
-      console.log(variables)
 
       let content = this.compile(variables)
 
