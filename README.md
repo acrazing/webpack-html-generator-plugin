@@ -119,9 +119,9 @@ export interface WebpackHtmlGeneratorPluginOptions {
   // be override
   // default is {}
   globalVariables?: {[key: string]: {[key: string]: string}};
-  // other header variable for default template
+  // other head content for default template
   // default is ''
-  header?: string;
+  head?: string;
   // content variable for default template
   content?: string;
   // the filename to emit, `[name]` will be replaced
@@ -144,9 +144,11 @@ any syntax supported by it.
 - each entry will generate a html file except for `commonsChunk` specified one,
 this one will be included by each other entry.
 - the variables invoked for template function include all `entryVariables[entry]`
-and `globalVariables` and `header`, `content`, and
+and `globalVariables` and `head`, `content`, and
     - `links`: the compiled stylesheet link tags
     - `scripts`: the compiled script tags
+- the `title` for each entryVariable is recommended, if not set, the title will
+be the entry `name.replace(/[\/_]/g, ' ')`
 
 ## Licence
 

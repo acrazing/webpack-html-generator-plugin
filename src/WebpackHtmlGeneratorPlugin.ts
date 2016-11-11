@@ -28,7 +28,7 @@ export interface WebpackHtmlGeneratorPluginOptions {
   template?: string|((data: any) => string);
   entryVariables?: {[key: string]: {[key: string]: string}};
   globalVariables?: {[key: string]: {[key: string]: string}};
-  header?: string;
+  head?: string;
   content?: string;
   dist?: string;
   compress?: boolean;
@@ -44,7 +44,7 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
       commonsChunk = 'vendor',
       template = tpl,
       dist = '[name].html',
-      header = '',
+      head = '',
       content = '<div id="root"></div>',
       entryVariables = {},
       globalVariables = {},
@@ -57,7 +57,7 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
       dist,
       entryVariables,
       globalVariables,
-      header,
+      head,
       content,
       compress,
     }
@@ -116,10 +116,9 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
       const filename = this.options.dist.replace(/\[name]/g, name)
 
       const variables: {[key: string]: string} = {
-        header : this.options.header,
         content: this.options.content,
         title  : name.replace(/[\/_]/g, ' '),
-        head   : '',
+        head   : this.options.head,
       }
 
       const locals = this.getVariables(chunks[name], compilation)
