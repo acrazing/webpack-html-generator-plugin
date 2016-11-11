@@ -1,6 +1,6 @@
 {
   "name": "webpack-html-generator-plugin",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A webpack plugin to generate html entry for each js entry",
   "main": "lib/index.js",
   "scripts": {
