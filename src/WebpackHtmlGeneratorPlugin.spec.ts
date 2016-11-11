@@ -11,7 +11,7 @@
 
 import webpack = require('webpack')
 import { resolve } from 'path'
-import { WebpackHtmlPlugin } from './WebpackHtmlPlugin'
+import { WebpackHtmlGeneratorPlugin } from './WebpackHtmlGeneratorPlugin'
 const ExtractTextPlugin: any = require('extract-text-webpack-plugin')
 
 const compiler = webpack({
@@ -38,7 +38,7 @@ const compiler = webpack({
       name    : 'vendor',
       filename: '[name].[chunkhash].js',
     }),
-    new WebpackHtmlPlugin(),
+    new WebpackHtmlGeneratorPlugin(),
     new ExtractTextPlugin('[name].[contenthash].css', {
       disable  : false,
       allChunks: true,

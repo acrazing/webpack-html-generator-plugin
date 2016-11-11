@@ -19,12 +19,11 @@ import {
 } from 'path-rewrite-plugin/lib/declarations'
 import { compile } from 'ejs'
 import { minify } from 'html-minifier'
-import webpack = require('webpack')
 
 
 const tpl = readFileSync(resolve(__dirname, '../template.html'), 'utf8')
 
-export interface WebpackHtmlPluginOptions {
+export interface WebpackHtmlGeneratorPluginOptions {
   commonsChunk?: string;
   template?: string|((data: any) => string);
   entryVariables?: {[key: string]: {[key: string]: string}};
@@ -36,8 +35,8 @@ export interface WebpackHtmlPluginOptions {
 }
 
 
-export class WebpackHtmlPlugin implements IPlugin {
-  private options: WebpackHtmlPluginOptions
+export class WebpackHtmlGeneratorPlugin implements IPlugin {
+  private options: WebpackHtmlGeneratorPluginOptions
   private compile: (obj: any) => string
 
   constructor(
@@ -50,7 +49,7 @@ export class WebpackHtmlPlugin implements IPlugin {
       entryVariables = {},
       globalVariables = {},
       compress = true,
-    }: WebpackHtmlPluginOptions = {}
+    }: WebpackHtmlGeneratorPluginOptions = {}
   ) {
     this.options = {
       commonsChunk,

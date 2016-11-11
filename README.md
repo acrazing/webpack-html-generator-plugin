@@ -1,11 +1,11 @@
-# webpack-html-plugin
+# webpack-html-generator-plugin
 
 A webpack plugin to generate html for each entry
 
 ## Install
 
 ```bash
-npm i -D webpack-html-plugin
+npm i -D webpack-html-generator-plugin
 ```
 
 ## Usage
@@ -14,13 +14,13 @@ Add follow config to your webpack config
 
 ```js
 // webpack.config.js
-const WebpackHtmlPlugin = require('webpack-html-plugin')
+const WebpackHtmlGeneratorPlugin = require('webpack-html-generator-plugin')
 
 module.exports = {
   // ...other configs
   plugins: [
     // ...other plugins
-    new WebpackHtmlPlugin(),
+    new WebpackHtmlGeneratorPlugin(),
   ]
 }
 
@@ -33,12 +33,12 @@ and `commonsChunk` according to config.
 
 For example:
 
-The config as <./src/WebpackHtmlPlugin.spec.ts>:
+The config as [WebpackHtmlGeneratorPlugin](./src/WebpackHtmlGeneratorPlugin.spec.ts):
 
 ```ts
 import webpack = require('webpack');
 import { resolve } from 'path';
-import { WebpackHtmlPlugin } from './WebpackHtmlPlugin';
+import { WebpackHtmlGeneratorPlugin } from './WebpackHtmlGeneratorPlugin';
 const ExtractTextPlugin: any = require('extract-text-webpack-plugin')
 
 const compiler = webpack({
@@ -65,7 +65,7 @@ const compiler = webpack({
       name    : 'vendor',
       filename: '[name].[chunkhash].js',
     }),
-    new WebpackHtmlPlugin(),
+    new WebpackHtmlGeneratorPlugin(),
     new ExtractTextPlugin('[name].[contenthash].css', {
       disable  : false,
       allChunks: true,
@@ -74,8 +74,9 @@ const compiler = webpack({
 })
 ```
 
-The project content as <./__mock__>, and the build with webpack will generate
-a html file `two.html` as follow:
+The project content as [__mock__](./__mock__), and the build with webpack will 
+generate a html file `two.html` as follow:
+(The html will be compressed by default, this is pretty formatted)
 
 ```html
 <!DOCTYPE html>
@@ -102,7 +103,7 @@ a html file `two.html` as follow:
 
 ```ts
 
-export interface WebpackHtmlPluginOptions {
+export interface WebpackHtmlGeneratorPluginOptions {
   // commonsChunk name, default is vendor, if set as empty string,
   // will ignore
   commonsChunk?: string;
@@ -135,7 +136,7 @@ export interface WebpackHtmlPluginOptions {
 
 // usage:
 
-new WebpackHtmlPlugin(options);
+new WebpackHtmlGeneratorPlugin(options);
 ```
 
 - the template compile engine is [ejs](https://github.com/tj/ejs), you can uses 

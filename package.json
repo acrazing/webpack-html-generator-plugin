@@ -1,29 +1,31 @@
 {
-  "name": "webpack-html-plugin",
+  "name": "webpack-html-generator-plugin",
   "version": "0.0.1",
   "description": "A webpack plugin to generate html entry for each js entry",
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --recursive ./src/**/*.spec.ts",
-    "lint": "tslint",
-    "build": "tsc",
+    "lint": "tslint ./src/**/*.ts",
+    "build": "npm run lint && rm -rf ./lib && tsc",
     "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/acrazing/webpack-html-plugin.git"
+    "url": "git+https://github.com/acrazing/webpack-html-generator-plugin.git"
   },
   "keywords": [
     "webpack",
     "html",
+    "generate",
+    "generator",
     "plugin"
   ],
   "author": "acrazing <joking.young@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/acrazing/webpack-html-plugin/issues"
+    "url": "https://github.com/acrazing/webpack-html-generator-plugin/issues"
   },
-  "homepage": "https://github.com/acrazing/webpack-html-plugin#readme",
+  "homepage": "https://github.com/acrazing/webpack-html-generator-plugin#readme",
   "dependencies": {
     "ejs": "^2.5.2",
     "html-minifier": "^3.1.1",
