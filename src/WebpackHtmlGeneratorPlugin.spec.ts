@@ -16,8 +16,10 @@ const ExtractTextPlugin: any = require('extract-text-webpack-plugin')
 
 const compiler = webpack({
   entry  : {
-    one: resolve(__dirname, '../__mock__/one'),
-    two: resolve(__dirname, '../__mock__/two'),
+    one  : resolve(__dirname, '../__mock__/one'),
+    two  : resolve(__dirname, '../__mock__/two'),
+    three: resolve(__dirname, '../__mock__/three'),
+    four : resolve(__dirname, '../__mock__/four'),
   },
   output : {
     filename     : '[name].[chunkhash].js',
@@ -30,6 +32,7 @@ const compiler = webpack({
     loaders: [
       { test: /\.ts$/, loader: 'ts-loader' },
       { test: /\.css$/, loader: ExtractTextPlugin.extract('css-loader') },
+      { test: /\.html$/, loader: 'file-loader' },
     ],
   },
   plugins: [
@@ -38,7 +41,9 @@ const compiler = webpack({
       name    : 'vendor',
       filename: '[name].[chunkhash].js',
     }),
-    new WebpackHtmlGeneratorPlugin(),
+    new WebpackHtmlGeneratorPlugin({
+      ignores: ['three'],
+    }),
     new ExtractTextPlugin('[name].[contenthash].css', {
       disable  : false,
       allChunks: true,

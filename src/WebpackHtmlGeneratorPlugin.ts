@@ -26,13 +26,33 @@ const tpl = readFileSync(resolve(__dirname, '../template.html'), 'utf8')
 export interface WebpackHtmlGeneratorPluginOptions {
   commonsChunk?: string;
   template?: string|((data: any) => string);
-  entryVariables?: {[key: string]: {[key: string]: string}};
-  globalVariables?: {[key: string]: {[key: string]: string}};
+  entryVariables?: {[entry: string]: {[key: string]: string}};
+  globalVariables?: {[key: string]: string};
   head?: string;
   content?: string;
   dist?: string;
   compress?: boolean;
+  ignores?: string[];
 }
+
+
+function assign(target: any, ...args: any[]) {
+  args.forEach((item) => {
+    if (item) {
+      for (let i in item) {
+        if (item.hasOwnProperty(i)) {
+          target[i] = item[i]
+        }
+      }
+    }
+  })
+  return target
+}
+
+
+function isJs(name: string) { return name.indexOf('.js', -3) > -1 }
+
+function isCss(name: string) { return name.indexOf('.css', -4) > -1 }
 
 
 export class WebpackHtmlGeneratorPlugin implements IPlugin {
@@ -49,7 +69,8 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
       entryVariables = {},
       globalVariables = {},
       compress = true,
-    }: WebpackHtmlGeneratorPluginOptions = {}
+      ignores = [],
+    }: WebpackHtmlGeneratorPluginOptions = {},
   ) {
     this.options = {
       commonsChunk,
@@ -60,6 +81,7 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
       head,
       content,
       compress,
+      ignores,
     }
 
     this.compile = typeof this.options.template === 'function'
@@ -67,35 +89,17 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
       : compile(this.options.template as any)
   }
 
-  private assign(target: any, ...args: any[]) {
-    args.forEach((item) => {
-      if (item) {
-        for (let i in item) {
-          if (item.hasOwnProperty(i)) {
-            target[i] = item[i]
-          }
-        }
-      }
-    })
-    return target
-  }
-
-
-  private isJs(name: string) { return name.indexOf('.js', -3) > -1 }
-
-  private isCss(name: string) { return name.indexOf('.css', -4) > -1 }
-
   private getVariables(asset: string|string[], compilation: Compilation) {
-    const assets: string[] = Array.isArray(asset) ? asset : [asset]
+    const assets: string[] = Array.isArray(asset) ? asset : [asset as any]
 
     const base  = compilation.options.output.publicPath
     let links   = ''
     let scripts = ''
 
     assets.forEach((filename) => {
-      if (this.isJs(filename)) {
+      if (isJs(filename)) {
         scripts += `<script src="${base + filename}"></script>`
-      } else if (this.isCss(filename)) {
+      } else if (isCss(filename)) {
         links += `<link rel="stylesheet" href="${base + filename}"/>`
       }
     })
@@ -112,7 +116,13 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
       : { links: '', scripts: '' }
 
     for (let name in chunks) {
-      if (name === this.options.commonsChunk) { continue }
+      if (
+        name === this.options.commonsChunk
+        || ~this.options.ignores.indexOf(name)
+        || assets[name]
+      ) {
+        continue
+      }
       const filename = this.options.dist.replace(/\[name]/g, name)
 
       const variables: {[key: string]: string} = {
@@ -126,7 +136,7 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
       locals.links   = commons.links + locals.links
       locals.scripts = commons.scripts + locals.scripts
 
-      this.assign(
+      assign(
         variables,
         locals,
         this.options.globalVariables,

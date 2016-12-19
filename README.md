@@ -101,7 +101,7 @@ generate a html file `two.html` as follow:
 
 ## Options
 
-```ts
+```typescript
 
 export interface WebpackHtmlGeneratorPluginOptions {
   // commonsChunk name, default is vendor, if set as empty string,
@@ -113,12 +113,12 @@ export interface WebpackHtmlGeneratorPluginOptions {
   template?: string|((data: any) => string);
   // variables for specified entry
   // default is empty
-  entryVariables?: {[key: string]: {[key: string]: string}};
+  entryVariables?: {[entry: string]: {[key: string]: string}};
   // common variables for all entry
   // if same name exits in entryVariables[entry], will
   // be override
   // default is {}
-  globalVariables?: {[key: string]: {[key: string]: string}};
+  globalVariables?: {[key: string]: string};
   // other head content for default template
   // default is ''
   head?: string;
@@ -131,6 +131,9 @@ export interface WebpackHtmlGeneratorPluginOptions {
   // compress html or not by html-minifier
   // default is true
   compress?: boolean;
+  // ignored entries or existed chunk name will
+  // not emit generated file
+  ignores?: string[];
 }
 
 
