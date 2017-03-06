@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="<%- htmlClass %>">
 
 <head>
     <meta charset="UTF-8"/>
@@ -13,9 +13,11 @@
     <%- links %>
 </head>
 
-<body>
-<%- content %>
-<%- scripts %>
+<body "<%- bodyClass %>">
+    <%- header %>
+    <%- content %>
+    <%- scripts %>
+    <%- footer %>
 </body>
 
 </html>

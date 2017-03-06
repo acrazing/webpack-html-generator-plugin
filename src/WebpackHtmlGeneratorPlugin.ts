@@ -126,9 +126,13 @@ export class WebpackHtmlGeneratorPlugin implements IPlugin {
       const filename = this.options.dist.replace(/\[name]/g, name)
 
       const variables: {[key: string]: string} = {
-        content: this.options.content,
-        title  : name.replace(/[\/_]/g, ' '),
-        head   : this.options.head,
+        htmlClass: '',
+        bodyClass: '',
+        header   : '',
+        footer   : '',
+        content  : this.options.content,
+        title    : name.replace(/[\/_]/g, ' '),
+        head     : this.options.head,
       }
 
       const locals = this.getVariables(chunks[name], compilation)
