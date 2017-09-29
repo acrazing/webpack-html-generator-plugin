@@ -40,11 +40,11 @@ function assign(target: any, ...args: any[]) {
 }
 
 function isJs(name: string) {
-  return name.indexOf('.js', -3) > -1
+  return name.endsWith('.js')
 }
 
 function isCss(name: string) {
-  return name.indexOf('.css', -4) > -1
+  return name.endsWith('.css')
 }
 
 interface Compilation {
