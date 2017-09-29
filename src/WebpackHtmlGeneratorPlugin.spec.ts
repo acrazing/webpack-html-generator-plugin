@@ -8,27 +8,27 @@
  * @desc WebpackHtmlPlugin.spec.ts
  */
 
-
 import webpack = require('webpack')
 import { resolve } from 'path'
 import { WebpackHtmlGeneratorPlugin } from './WebpackHtmlGeneratorPlugin'
+
 const ExtractTextPlugin: any = require('extract-text-webpack-plugin')
 
 const compiler = webpack({
-  entry  : {
-    one  : resolve(__dirname, '../__mock__/one'),
-    two  : resolve(__dirname, '../__mock__/two'),
+  entry: {
+    one: resolve(__dirname, '../__mock__/one'),
+    two: resolve(__dirname, '../__mock__/two'),
     three: resolve(__dirname, '../__mock__/three'),
-    four : resolve(__dirname, '../__mock__/four'),
+    four: resolve(__dirname, '../__mock__/four'),
   },
-  output : {
-    filename     : '[name].[chunkhash].js',
-    path         : resolve(__dirname, '../dist'),
+  output: {
+    filename: '[name].[chunkhash].js',
+    path: resolve(__dirname, '../dist'),
     chunkFilename: 'chunk.[name].[chunkhash].js',
-    publicPath   : '/',
+    publicPath: '/',
   },
-  resolve: { extensions: ['', '.ts', '.js'] },
-  module : {
+  resolve: { extensions: ['.ts', '.js'] },
+  module: {
     loaders: [
       { test: /\.ts$/, loader: 'ts-loader' },
       { test: /\.css$/, loader: ExtractTextPlugin.extract('css-loader') },
@@ -36,21 +36,20 @@ const compiler = webpack({
     ],
   },
   plugins: [
-    new webpack.optimize.OccurenceOrderPlugin(false),
     new webpack.optimize.CommonsChunkPlugin({
-      name    : 'vendor',
+      names: ['vendor', 'manifest'],
       filename: '[name].[chunkhash].js',
     }),
     new WebpackHtmlGeneratorPlugin({
       ignores: ['three'],
     }),
     new ExtractTextPlugin('[name].[contenthash].css', {
-      disable  : false,
+      disable: false,
       allChunks: true,
     }),
   ],
 })
 
 compiler.watch({}, (error, stats) => {
-  console.log(stats.toString())
+  console.log('watch', stats.toString(), error)
 })
