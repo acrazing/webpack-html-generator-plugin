@@ -12,21 +12,22 @@ import { readdirSync } from 'fs'
 import { SMap } from 'monofile-utilities/lib/map'
 import { basename, resolve } from 'path'
 import webpack from 'webpack'
-import { WebpackHtmlGeneratorPlugin } from './WebpackHtmlGeneratorPlugin'
+import { HtmlGeneratorPlugin, loadEntries } from './HtmlGeneratorPlugin'
 
 const MiniCssExtractPlugin: any = require('mini-css-extract-plugin')
 
 const ENTRIES = readdirSync(resolve(__dirname, '../__mock__'))
   .filter((item) => item.endsWith('.ts') && item !== 'common.ts')
   .map((item) => basename(item, '.ts'))
+  .reduce((prev, name) => {
+    prev[name] = [resolve(__dirname, `../__mock__/${name}`)]
+    return prev
+  }, {} as SMap<string[]>)
 
 const compiler = webpack({
   mode: 'development',
   entry: {
-    ...ENTRIES.reduce((prev, name) => {
-      prev[name] = [resolve(__dirname, `../__mock__/${name}`)]
-      return prev
-    }, {} as SMap<string[]>),
+    ...ENTRIES,
   },
   output: {
     filename: '[name].[chunkhash].js',
@@ -77,9 +78,10 @@ const compiler = webpack({
     ],
   },
   plugins: [
-    new WebpackHtmlGeneratorPlugin({
+    new HtmlGeneratorPlugin({
       compress: false,
       filename: 'e.[name].html',
+      entries: loadEntries(ENTRIES, { e1: false }),
     }),
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css',

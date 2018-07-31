@@ -9,14 +9,17 @@
  */
 
 import { compile } from 'ejs'
-import { readFileSync } from 'fs'
+import * as fs from 'fs'
 import { minify } from 'html-minifier'
+import { evalJSON } from 'monofile-utilities/lib/json'
 import { SMap } from 'monofile-utilities/lib/map'
-import { resolve } from 'path'
+import * as path from 'path'
 import { Tapable } from 'tapable'
 import { __assign } from 'tslib'
 import webpack from 'webpack'
 import CallbackFunction = Tapable.CallbackFunction
+
+export type TemplateFunction = (data: { data: HtmlInput }) => string
 
 export interface HtmlInput {
   htmlClass?: string;
@@ -30,7 +33,7 @@ export interface HtmlInput {
   content?: string;
   scripts?: string;
   footer?: string;
-  template?: (data: { data: HtmlInput }) => string;
+  template?: TemplateFunction;
 }
 
 export interface WebpackHtmlGeneratorPluginOptions extends HtmlInput {
@@ -38,10 +41,6 @@ export interface WebpackHtmlGeneratorPluginOptions extends HtmlInput {
   compress?: boolean;
   entries?: SMap<HtmlInput | false>;
 }
-
-const defaultTpl = compile(
-  readFileSync(resolve(__dirname, '../template.html'), 'utf8'),
-)
 
 function isJs(name: string) {
   return name.lastIndexOf('.js') === name.length - 3
@@ -51,8 +50,59 @@ function isCss(name: string) {
   return name.lastIndexOf('.css') === name.length - 4
 }
 
-export class WebpackHtmlGeneratorPlugin {
-  private options: Required<WebpackHtmlGeneratorPluginOptions>
+export const defaultTemplate: TemplateFunction = compile(
+  fs.readFileSync(path.resolve(__dirname, '../template.html'), 'utf8'),
+)
+
+export function loadEntries(
+  entries: SMap<string | string[]>,
+  defined: SMap<HtmlInput | false> = {},
+  context = process.cwd(),
+) {
+  return Object.keys(entries).reduce((map, name) => {
+    if (name in defined) {
+      map[name] = defined[name]
+    } else {
+      const entry = entries[name]
+      let index = Array.isArray(entry) ? entry[entry.length - 1] : entry
+      index = path.isAbsolute(index) ? index : path.join(context, index)
+      if (fs.existsSync(index) && fs.statSync(index).isDirectory()) {
+        index = path.join(index, 'index')
+      } else {
+        index = index.replace(/\.[^.\/\\]*$/, '')
+      }
+      const config: HtmlInput = {}
+      const configFile = `${index}.json`
+      if (fs.existsSync(configFile)) {
+        try {
+          const data = evalJSON(fs.readFileSync(configFile, 'utf8')).template
+          for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+              if (data[key] === null) {
+                (config as any)[key] = ''
+              } else if (data[key]) {
+                (config as any)[key] = data[key]
+              }
+            }
+          }
+        } catch {
+        }
+      }
+      const templateFile = `${index}.html`
+      if (fs.existsSync(templateFile)) {
+        config.template = compile(fs.readFileSync(templateFile, 'utf8'))
+      }
+      map[name] = config
+    }
+    return map
+  }, {} as SMap<HtmlInput | false>)
+}
+
+export class HtmlGeneratorPlugin {
+  static defaultTemplate = defaultTemplate
+  static loadEntries = loadEntries
+
+  private readonly options: Required<WebpackHtmlGeneratorPluginOptions>
   private publicPath = ''
 
   constructor({
@@ -67,7 +117,7 @@ export class WebpackHtmlGeneratorPlugin {
     content = '<div id="root"></div>',
     scripts = '',
     footer = '',
-    template = defaultTpl,
+    template = defaultTemplate,
     filename = '[name].html',
     compress = true,
     entries = {},
@@ -89,6 +139,7 @@ export class WebpackHtmlGeneratorPlugin {
       compress,
       entries,
     }
+    console.log('entries', entries)
   }
 
   private emitHtml(
@@ -104,8 +155,8 @@ export class WebpackHtmlGeneratorPlugin {
       const filename = this.options.filename.replace(/\[name]/g, name)
       const variables: Required<HtmlInput> = __assign(
         {},
-        this.options.entries[name] || {},
         this.options,
+        this.options.entries[name] || {},
       )
       let scripts = ''
       let links = '';

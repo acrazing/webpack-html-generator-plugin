@@ -8,5 +8,4 @@
  * @desc four.ts
  */
 
-
-import './e4.html'
+console.log('e4')

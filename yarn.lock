@@ -2074,9 +2074,9 @@ mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.0, mkdirp@~0.5.1:
   dependencies:
     minimist "0.0.8"
 
-monofile-utilities@^1.8.1:
-  version "1.8.1"
-  resolved "http://registry.npm.taobao.org/monofile-utilities/download/monofile-utilities-1.8.1.tgz#680d3e40515461460c9f46f80a90ca76b444c6b5"
+monofile-utilities@^1.9.1:
+  version "1.9.1"
+  resolved "https://registry.yarnpkg.com/monofile-utilities/-/monofile-utilities-1.9.1.tgz#98be4114f5fa3f17f7d8d696e06f2b5b3ad22dae"
   dependencies:
     "@types/lodash" "*"
     "@types/node" "*"

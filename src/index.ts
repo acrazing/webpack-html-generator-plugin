@@ -9,4 +9,4 @@
  */
 
 
-export * from './WebpackHtmlGeneratorPlugin'
+export * from './HtmlGeneratorPlugin'
