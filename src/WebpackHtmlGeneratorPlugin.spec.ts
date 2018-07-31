@@ -8,18 +8,25 @@
  * @desc WebpackHtmlPlugin.spec.ts
  */
 
-import webpack = require('webpack')
-import { resolve } from 'path'
+import { readdirSync } from 'fs'
+import { SMap } from 'monofile-utilities/lib/map'
+import { basename, resolve } from 'path'
+import webpack from 'webpack'
 import { WebpackHtmlGeneratorPlugin } from './WebpackHtmlGeneratorPlugin'
 
-const ExtractTextPlugin: any = require('extract-text-webpack-plugin')
+const MiniCssExtractPlugin: any = require('mini-css-extract-plugin')
+
+const ENTRIES = readdirSync(resolve(__dirname, '../__mock__'))
+  .filter((item) => item.endsWith('.ts') && item !== 'common.ts')
+  .map((item) => basename(item, '.ts'))
 
 const compiler = webpack({
+  mode: 'development',
   entry: {
-    one: resolve(__dirname, '../__mock__/one'),
-    two: resolve(__dirname, '../__mock__/two'),
-    three: resolve(__dirname, '../__mock__/three'),
-    four: resolve(__dirname, '../__mock__/four'),
+    ...ENTRIES.reduce((prev, name) => {
+      prev[name] = [resolve(__dirname, `../__mock__/${name}`)]
+      return prev
+    }, {} as SMap<string[]>),
   },
   output: {
     filename: '[name].[chunkhash].js',
@@ -27,29 +34,77 @@ const compiler = webpack({
     chunkFilename: 'chunk.[name].[chunkhash].js',
     publicPath: '/',
   },
-  resolve: { extensions: ['.ts', '.js'] },
+  resolve: { extensions: ['.ts', '.js', '.json'] },
   module: {
-    loaders: [
+    rules: [
       { test: /\.ts$/, loader: 'ts-loader' },
-      { test: /\.css$/, loader: ExtractTextPlugin.extract('css-loader') },
+      {
+        test: /\.css$/, use: [
+          { loader: MiniCssExtractPlugin.loader, options: { sourceMap: true } },
+          { loader: 'css-loader', options: { sourceMap: true } },
+          {
+            loader: 'postcss-loader',
+            options: {
+              sourceMap: true,
+              plugins: [
+                require('postcss-import')(),
+                require('autoprefixer')({
+                  browsers: [
+                    'Chrome >= 4',
+                    'Firefox >= 2',
+                    'ie >= 10',
+                    'iOS >= 6',
+                    'Opera >= 10',
+                    'Safari >= 6',
+                    'Android >= 4',
+                    'UCAndroid >= 11',
+                  ],
+                }),
+                require('cssnano')({
+                  preset: [
+                    'default',
+                    {
+                      discardComments: { removeAll: true },
+                    },
+                  ],
+                }),
+              ],
+            },
+          },
+        ],
+      },
       { test: /\.html$/, loader: 'file-loader' },
     ],
   },
   plugins: [
-    new webpack.optimize.CommonsChunkPlugin({
-      names: ['vendor', 'manifest'],
-      filename: '[name].[chunkhash].js',
-    }),
     new WebpackHtmlGeneratorPlugin({
-      ignores: ['three'],
+      compress: false,
+      filename: 'e.[name].html',
     }),
-    new ExtractTextPlugin('[name].[contenthash].css', {
-      disable: false,
-      allChunks: true,
+    new MiniCssExtractPlugin({
+      filename: '[name].[contenthash].css',
+      chunkFilename: '[id].[contenthash].css',
     }),
   ],
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /node_modules/,
+          name: 'vendor',
+          chunks: 'all',
+        },
+      },
+    },
+    runtimeChunk: {
+      name: 'manifest',
+    },
+    namedModules: true,
+    noEmitOnErrors: true,
+  },
+  devtool: false,
 })
 
-compiler.watch({}, (error, stats) => {
+compiler.run((error, stats) => {
   console.log('watch', stats.toString(), error)
 })

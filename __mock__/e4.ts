@@ -3,11 +3,10 @@
  * Copyright 2016 - acrazing
  *
  * @author acrazing joking.young@gmail.com
- * @since 2016-11-11 17:43:04
+ * @since 2016-12-19 17:40:35
  * @version 1.0.0
- * @desc two.less
+ * @desc four.ts
  */
 
-.two {
-  background-color: whitesmoke;
-}
+
+import './e4.html'

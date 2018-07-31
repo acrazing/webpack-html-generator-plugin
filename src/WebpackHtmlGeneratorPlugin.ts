@@ -11,144 +11,118 @@
 import { compile } from 'ejs'
 import { readFileSync } from 'fs'
 import { minify } from 'html-minifier'
+import { SMap } from 'monofile-utilities/lib/map'
 import { resolve } from 'path'
+import { Tapable } from 'tapable'
+import { __assign } from 'tslib'
+import webpack from 'webpack'
+import CallbackFunction = Tapable.CallbackFunction
 
-const tpl = readFileSync(resolve(__dirname, '../template.html'), 'utf8')
-
-export interface WebpackHtmlGeneratorPluginOptions {
-  template?: string | ((data: any) => string);
-  entryVariables?: { [entry: string]: { [key: string]: string } };
-  globalVariables?: { [key: string]: string };
+export interface HtmlInput {
+  htmlClass?: string;
+  title?: string;
+  keywords?: string;
+  description?: string;
   head?: string;
+  links?: string;
+  bodyClass?: string;
+  header?: string;
   content?: string;
-  dist?: string;
-  compress?: boolean;
-  ignores?: string[];
+  scripts?: string;
+  footer?: string;
+  template?: (data: { data: HtmlInput }) => string;
 }
 
-function assign(target: any, ...args: any[]) {
-  args.forEach((item) => {
-    if (item) {
-      for (let i in item) {
-        if (item.hasOwnProperty(i)) {
-          target[i] = item[i]
-        }
-      }
-    }
-  })
-  return target
+export interface WebpackHtmlGeneratorPluginOptions extends HtmlInput {
+  filename?: string;
+  compress?: boolean;
+  entries?: SMap<HtmlInput | false>;
 }
+
+const defaultTpl = compile(
+  readFileSync(resolve(__dirname, '../template.html'), 'utf8'),
+)
 
 function isJs(name: string) {
-  return name.endsWith('.js')
+  return name.lastIndexOf('.js') === name.length - 3
 }
 
 function isCss(name: string) {
-  return name.endsWith('.css')
-}
-
-interface Compilation {
-  options: {
-    output: {
-      publicPath: string;
-    };
-  };
-  getStats(): {
-    toJson(): {
-      entrypoints: Array<{
-        chunks: number[];
-        assets: string[];
-        isOverSizeLimit: boolean;
-      }>;
-    };
-  };
-  assets: {
-    [key: string]: {
-      size(): number;
-      source(): string;
-    };
-  };
-}
-
-export interface Compiler {
-  plugin(event: string, callback: Function): void;
+  return name.lastIndexOf('.css') === name.length - 4
 }
 
 export class WebpackHtmlGeneratorPlugin {
-  private options: WebpackHtmlGeneratorPluginOptions
-  private compile: (obj: any) => string
+  private options: Required<WebpackHtmlGeneratorPluginOptions>
+  private publicPath = ''
 
-  constructor(
-    {
-      template = tpl,
-      dist = '[name].html',
-      head = '',
-      content = '<div id="root"></div>',
-      entryVariables = {},
-      globalVariables = {},
-      compress = true,
-      ignores = [],
-    }: WebpackHtmlGeneratorPluginOptions = {},
-  ) {
+  constructor({
+    htmlClass = '',
+    title = '',
+    keywords = '',
+    description = '',
+    head = '',
+    links = '',
+    bodyClass = '',
+    header = '',
+    content = '<div id="root"></div>',
+    scripts = '',
+    footer = '',
+    template = defaultTpl,
+    filename = '[name].html',
+    compress = true,
+    entries = {},
+  }: WebpackHtmlGeneratorPluginOptions = {}) {
     this.options = {
-      template,
-      dist,
-      entryVariables,
-      globalVariables,
+      htmlClass,
+      title,
+      keywords,
+      description,
       head,
+      links,
+      bodyClass,
+      header,
       content,
+      scripts,
+      footer,
+      template,
+      filename,
       compress,
-      ignores,
+      entries,
     }
-
-    this.compile = typeof this.options.template === 'function'
-      ? this.options.template as any
-      : compile(this.options.template as any)
   }
 
-  private emitHtml(compilation: Compilation, callback: (error?: Error) => void) {
-    const entries = compilation.getStats().toJson().entrypoints
+  private emitHtml(
+    compilation: webpack.compilation.Compilation,
+    callback: CallbackFunction,
+  ) {
+    const entries = compilation.entrypoints
     const assets = compilation.assets
-    const base = compilation.options.output.publicPath
-
-    for (let name in entries) {
-      if (
-        ~this.options.ignores.indexOf(name)
-        || assets[name]
-      ) {
-        continue
+    entries.forEach((entry, name) => {
+      if (this.options.entries[name] === false || assets[name]) {
+        return
       }
-      const filename = this.options.dist.replace(/\[name]/g, name)
-
-      const variables: { [key: string]: string } = {
-        htmlClass: '',
-        bodyClass: '',
-        header: '',
-        footer: '',
-        content: this.options.content,
-        title: name.replace(/[\/_]/g, ' '),
-        head: this.options.head,
-      }
-
+      const filename = this.options.filename.replace(/\[name]/g, name)
+      const variables: Required<HtmlInput> = __assign(
+        {},
+        this.options.entries[name] || {},
+        this.options,
+      )
       let scripts = ''
-      let links = ''
-
-      entries[name].assets.forEach((filename) => {
-        if (isJs(filename)) {
-          scripts += `<script src="${base + filename}"></script>`
-        } else if (isCss(filename)) {
-          links += `<link rel="stylesheet" href="${base + filename}"/>`
-        }
+      let links = '';
+      (entry.chunks || []).forEach((chunk: webpack.compilation.Chunk) => {
+        (chunk.files || []).forEach((filename) => {
+          if (isJs(filename)) {
+            scripts += `<script src="${this.publicPath + filename}"></script>\n`
+          } else if (isCss(filename)) {
+            links += `<link rel="stylesheet" href="${this.publicPath + filename}"/>\n`
+          }
+        })
       })
 
-      assign(
-        variables,
-        { links, scripts },
-        this.options.globalVariables,
-        this.options.entryVariables[name],
-      )
+      variables.links = links
+      variables.scripts = scripts
 
-      let content = this.compile(variables)
+      let content = variables.template({ data: variables })
 
       this.options.compress && (content = minify(content, {
         collapseBooleanAttributes: true,
@@ -167,12 +141,13 @@ export class WebpackHtmlGeneratorPlugin {
         source: () => content,
         size: () => content.length,
       }
-    }
+    })
 
     callback()
   }
 
-  apply(compiler: Compiler) {
-    compiler.plugin('emit', this.emitHtml.bind(this))
+  apply(compiler: webpack.Compiler) {
+    this.publicPath = compiler.options.output!.publicPath!
+    compiler.hooks.emit.tapAsync('html-generator', this.emitHtml.bind(this))
   }
 }

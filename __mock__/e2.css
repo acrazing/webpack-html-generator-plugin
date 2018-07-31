@@ -5,10 +5,10 @@
  * @author acrazing joking.young@gmail.com
  * @since 2016-11-11 17:43:04
  * @version 1.0.0
- * @desc one.less
+ * @desc two.less
  */
+@import "./common.css";
 
-
-.one {
-  color: white;
+.two {
+  background-color: whitesmoke;
 }
