@@ -77,23 +77,29 @@ export function loadEntries(
       if (fs.existsSync(configFile)) {
         try {
           const data = evalJSON(fs.readFileSync(configFile, 'utf8')).template;
-          for (const key in data) {
-            if (data.hasOwnProperty(key)) {
-              if (data[key] === null) {
-                (config as any)[key] = '';
-              } else if (data[key]) {
-                (config as any)[key] = data[key];
+          if (data === false) {
+            map[name] = false;
+          } else {
+            for (const key in data) {
+              if (data.hasOwnProperty(key)) {
+                if (data[key] === null) {
+                  (config as any)[key] = '';
+                } else if (data[key]) {
+                  (config as any)[key] = data[key];
+                }
               }
             }
           }
         } catch {
         }
       }
-      const templateFile = `${index}.html`;
-      if (fs.existsSync(templateFile)) {
-        config.template = compile(fs.readFileSync(templateFile, 'utf8'));
+      if (map[name] !== false) {
+        const templateFile = `${index}.html`;
+        if (fs.existsSync(templateFile)) {
+          config.template = compile(fs.readFileSync(templateFile, 'utf8'));
+        }
+        map[name] = config;
       }
-      map[name] = config;
     }
     return map;
   }, {} as SMap<HtmlInput | false>);
@@ -164,10 +170,10 @@ export class HtmlGeneratorPlugin {
     const entries = compilation.entrypoints;
     const assets = compilation.assets;
     entries.forEach((entry, name) => {
-      if (this.options.entries[name] === false || assets[name]) {
+      const filename = this.options.filename.replace(/\[name]/g, name);
+      if (this.options.entries[name] === false || assets[filename]) {
         return;
       }
-      const filename = this.options.filename.replace(/\[name]/g, name);
       const variables: Required<HtmlInput> = __assign(
         {},
         this.options,
