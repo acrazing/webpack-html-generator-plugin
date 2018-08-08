@@ -8,4 +8,4 @@
  * @desc four.ts
  */
 
-console.log('e4')
+console.log('e4');

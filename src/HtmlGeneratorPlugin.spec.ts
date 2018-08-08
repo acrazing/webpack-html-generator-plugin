@@ -8,21 +8,37 @@
  * @desc WebpackHtmlPlugin.spec.ts
  */
 
-import { readdirSync } from 'fs'
-import { SMap } from 'monofile-utilities/lib/map'
-import { basename, resolve } from 'path'
-import webpack from 'webpack'
-import { HtmlGeneratorPlugin, loadEntries } from './HtmlGeneratorPlugin'
+import { readdirSync } from 'fs';
+import { SMap } from 'monofile-utilities/lib/map';
+import { basename, resolve } from 'path';
+import webpack from 'webpack';
+import { HtmlGeneratorPlugin } from './HtmlGeneratorPlugin';
+import CleanCSS = require('clean-css');
+import postcss = require('postcss');
 
-const MiniCssExtractPlugin: any = require('mini-css-extract-plugin')
+const autoprefixer: any = require('autoprefixer');
+
+const MiniCssExtractPlugin: any = require('mini-css-extract-plugin');
+const prefixer = autoprefixer({
+  browsers: [
+    'Chrome >= 4',
+    'Firefox >= 2',
+    'ie >= 10',
+    'iOS >= 6',
+    'Opera >= 10',
+    'Safari >= 6',
+    'Android >= 4',
+    'UCAndroid >= 11',
+  ],
+});
 
 const ENTRIES = readdirSync(resolve(__dirname, '../__mock__'))
   .filter((item) => item.endsWith('.ts') && item !== 'common.ts')
   .map((item) => basename(item, '.ts'))
   .reduce((prev, name) => {
-    prev[name] = [resolve(__dirname, `../__mock__/${name}`)]
-    return prev
-  }, {} as SMap<string[]>)
+    prev[name] = [resolve(__dirname, `../__mock__/${name}`)];
+    return prev;
+  }, {} as SMap<string[]>);
 
 const compiler = webpack({
   mode: 'development',
@@ -49,18 +65,7 @@ const compiler = webpack({
               sourceMap: true,
               plugins: [
                 require('postcss-import')(),
-                require('autoprefixer')({
-                  browsers: [
-                    'Chrome >= 4',
-                    'Firefox >= 2',
-                    'ie >= 10',
-                    'iOS >= 6',
-                    'Opera >= 10',
-                    'Safari >= 6',
-                    'Android >= 4',
-                    'UCAndroid >= 11',
-                  ],
-                }),
+                prefixer,
                 require('cssnano')({
                   preset: [
                     'default',
@@ -79,9 +84,14 @@ const compiler = webpack({
   },
   plugins: [
     new HtmlGeneratorPlugin({
-      compress: false,
+      compress: {
+        minifyCSS: (text) => {
+          return new CleanCSS().minify(postcss([prefixer])
+            .process(text).content).styles;
+        },
+      },
       filename: 'e.[name].html',
-      entries: loadEntries(ENTRIES, { e1: false }),
+      entries: { e1: false },
     }),
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css',
@@ -105,8 +115,8 @@ const compiler = webpack({
     noEmitOnErrors: true,
   },
   devtool: false,
-})
+});
 
 compiler.run((error, stats) => {
-  console.log('watch', stats.toString(), error)
-})
+  console.log('watch', stats.toString(), error);
+});

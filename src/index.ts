@@ -8,5 +8,4 @@
  * @desc index.ts
  */
 
-
-export * from './HtmlGeneratorPlugin'
+export * from './HtmlGeneratorPlugin';

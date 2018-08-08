@@ -8,8 +8,8 @@
  * @desc three.ts
  */
 
-import 'normalize.css'
-import './e3.css'
-import { common } from './common'
+import 'normalize.css';
+import { common } from './common';
+import './e3.css';
 
-console.log('THREE', common())
+console.log('THREE', common());

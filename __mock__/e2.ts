@@ -8,8 +8,8 @@
  * @desc two.ts
  */
 
-import { common } from './common'
-import './e2.css'
+import { common } from './common';
+import './e2.css';
 
-console.log('two:', common())
-console.log('tslib', require('tslib'))
+console.log('two:', common());
+console.log('tslib', require('tslib'));

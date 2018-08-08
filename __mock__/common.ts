@@ -8,5 +8,4 @@
  * @desc common.ts
  */
 
-
-export function common() { return 'common modules' }
+export function common() { return 'common modules'; }

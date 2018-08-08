@@ -8,9 +8,9 @@
  * @desc one.ts
  */
 
-import 'normalize.css'
-import { common } from './common'
-import './e1.css'
+import 'normalize.css';
+import { common } from './common';
+import './e1.css';
 
-console.log('one:', common())
-console.log('tslib', require('tslib'))
+console.log('one:', common());
+console.log('tslib', require('tslib'));
