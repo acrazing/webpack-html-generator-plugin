@@ -1,6 +1,6 @@
 {
   "name": "webpack-html-generator-plugin",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "A webpack plugin to generate html entry for each js entry",
   "main": "lib/index.js",
   "scripts": {
@@ -35,7 +35,7 @@
     "@types/uglify-js": "^3.0.3",
     "ejs": "^2.5.7",
     "html-minifier": "^3.5.5",
-    "monofile-utilities": "^1.9.1",
+    "monofile-utilities": "^4.5.0",
     "tslib": "^1.9.3"
   },
   "devDependencies": {
